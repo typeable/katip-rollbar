@@ -30,7 +30,7 @@ import "text" Data.Text.Lazy                       (toStrict)
 import "text" Data.Text.Lazy.Builder               (toLazyText)
 import "time" Data.Time.Clock                      (UTCTime)
 import "katip" Katip
-    ( LogItemObj
+    ( LogItem
     , Scribe(Scribe, liPush, scribeFinalizer)
     , Severity(DebugS, ErrorS, InfoS, NoticeS, WarningS)
     , Verbosity
@@ -98,7 +98,7 @@ mkRollbarScribe proxy accessToken branch codeVersion manager severity verbosity 
   pure Scribe { liPush, scribeFinalizer }
 
 rollbarItem ::
-  (LogItemObj a, RemoveHeaders headers) =>
+  (LogItem a, RemoveHeaders headers) =>
   proxy headers ->
   AccessToken ->
   Maybe Branch ->
