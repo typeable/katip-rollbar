@@ -11,7 +11,7 @@ library:
     - base >= 4.7 && < 5
     - hostname >= 1.0 && < 1.1
     - http-client >= 0.5.10
-    - katip >= 0.5 && < 1
+    - katip >= 0.8 && < 1
     - rollbar-hs >= 0.2 && < 0.4
     - stm-chans >= 3.0 && < 3.1
     - text >= 1.2 && < 1.3

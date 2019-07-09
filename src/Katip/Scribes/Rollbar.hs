@@ -3,6 +3,7 @@
 {-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE PackageImports      #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators       #-}
 
@@ -12,10 +13,10 @@ module Katip.Scribes.Rollbar
 
 import Prelude hiding (error)
 
-import "base" Control.Monad           (replicateM, when)
-import "base" Data.Foldable           (for_)
-import "base" Data.Functor            (void)
-import "base" GHC.Conc                (atomically)
+import "base" Control.Monad (replicateM, when)
+import "base" Data.Foldable (for_)
+import "base" Data.Functor  (void)
+import "base" GHC.Conc      (atomically)
 
 import "async" Control.Concurrent.Async            (async, waitCatch)
 import "stm-chans" Control.Concurrent.STM.TBMQueue
@@ -31,8 +32,8 @@ import "text" Data.Text.Lazy.Builder               (toLazyText)
 import "time" Data.Time.Clock                      (UTCTime)
 import "katip" Katip
     ( LogItem
-    , Scribe(Scribe, liPush, scribeFinalizer)
-    , Severity(DebugS, ErrorS, InfoS, NoticeS, WarningS)
+    , Scribe(..)
+    , Severity(..)
     , Verbosity
     , getEnvironment
     , itemJson
@@ -44,6 +45,7 @@ import "katip" Katip
     , _itemSeverity
     , _itemTime
     )
+import "katip" Katip.Core                          (PermitFunc)
 import "hostname" Network.HostName                 (HostName)
 import "http-client" Network.HTTP.Client           (Manager)
 import "rollbar-hs" Rollbar.AccessToken            (AccessToken)
@@ -83,19 +85,19 @@ mkRollbarScribe
   -> Maybe Branch
   -> Maybe CodeVersion
   -> Manager -- ^ Must support TLS
-  -> Severity
+  -> PermitFunc
   -> Verbosity
   -> IO Scribe
-mkRollbarScribe proxy accessToken branch codeVersion manager severity verbosity = do
+mkRollbarScribe proxy accessToken branch codeVersion manager scribePermitItem verbosity = do
   queue <- newTBMQueueIO queueSize
   workers <- replicateM workerSize (async $ mkWorker proxy manager queue)
-  let liPush item = when (permitItem severity item) $
+  let liPush item =
         atomically (writeTBMQueue queue $ rollbarItem' item)
       rollbarItem' item = rollbarItem proxy accessToken branch codeVersion verbosity item
       scribeFinalizer = do
         atomically (closeTBMQueue queue)
         for_ workers waitCatch
-  pure Scribe { liPush, scribeFinalizer }
+  pure Scribe { liPush, scribeFinalizer, scribePermitItem }
 
 rollbarItem ::
   (LogItem a, RemoveHeaders headers) =>
