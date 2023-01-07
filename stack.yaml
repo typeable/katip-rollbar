@@ -1,9 +1,14 @@
+resolver: lts-20.5
+
+packages:
+- .
+
+extra-deps:
+- git: https://github.com/typeable/rollbar-hs.git
+  commit: cf2e2a5df04b9d1e30dba18d2219b645c3c7b051
+
 nix:
   packages:
     - zlib
+
 flags: {}
-packages:
-- .
-extra-deps:
-- rollbar-hs-0.2.0.0
-resolver: lts-10.5

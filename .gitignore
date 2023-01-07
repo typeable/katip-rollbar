@@ -1,7 +1,5 @@
 ### Project specific ###
 
-*.cabal
-
 # Created by https://www.gitignore.io/api/vim,osx,linux,macos,emacs,windows,haskell,visualstudiocode
 
 ### Emacs ###
